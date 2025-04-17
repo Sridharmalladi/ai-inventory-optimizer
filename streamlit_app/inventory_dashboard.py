@@ -122,23 +122,25 @@ if page == "📊 EDA & Modeling" and not df.empty and model is not None:
     with col1:
         st.markdown("#### 🎯 Random Forest")
         fig_rf, ax_rf = plt.subplots(figsize=(6, 4))
-        ax_rf.scatter(sample_rf['Predicted'], sample_rf['Actual'], color='#ffa502', edgecolor='black')
+        ax_rf.scatter(sample_rf['Predicted'], sample_rf['Actual'], color='#ffa502', edgecolor='black', alpha=0.7, s=50)
         ax_rf.plot([0, sample_rf.max().max()], [0, sample_rf.max().max()], 'r--', label='Ideal Fit')
         ax_rf.set_xlabel("Predicted Demand")
         ax_rf.set_ylabel("Actual Units Sold")
-        ax_rf.set_title("RF Predictions")
+        ax_rf.set_title("Random Forest: Predicted vs Actual", fontsize=12, weight='bold')
         ax_rf.legend()
+        ax_rf.grid(True, linestyle='--', alpha=0.3)
         st.pyplot(fig_rf)
 
     with col2:
         st.markdown("#### ⚡ XGBoost")
         fig_xgb, ax_xgb = plt.subplots(figsize=(6, 4))
-        ax_xgb.scatter(sample_xgb['Predicted'], sample_xgb['Actual'], color='#00cec9', edgecolor='black')
+        ax_xgb.scatter(sample_xgb['Predicted'], sample_xgb['Actual'], color='#00cec9', edgecolor='black', alpha=0.7, s=50)
         ax_xgb.plot([0, sample_xgb.max().max()], [0, sample_xgb.max().max()], 'r--', label='Ideal Fit')
         ax_xgb.set_xlabel("Predicted Demand")
         ax_xgb.set_ylabel("Actual Units Sold")
-        ax_xgb.set_title("XGBoost Predictions")
+        ax_xgb.set_title("XGBoost: Predicted vs Actual", fontsize=12, weight='bold')
         ax_xgb.legend()
+        ax_xgb.grid(True, linestyle='--', alpha=0.3)
         st.pyplot(fig_xgb)
 
 # --- PAGE 2: CATEGORY & SEASONAL INSIGHTS ---
@@ -163,8 +165,8 @@ elif page == "📉 Category & Seasonal Insights" and not df.empty:
 
     st.markdown(f"### 📊 Avg Units Sold by Category – `{selected_season}`")
     with st.container():
-        fig, ax = plt.subplots(figsize=(10, 4))
-        bars = ax.barh(category_summary.index, category_summary.values, color='#0984e3', edgecolor='black')
+        fig, ax = plt.subplots(figsize=(10, 6))
+        bars = ax.barh(category_summary.index, category_summary.values, height=0.45, color='#3498db', edgecolor='black')
         ax.set_xlabel("Avg Units Sold", fontsize=11)
         ax.set_title(f"📦 Category Performance in {selected_season}", fontsize=14, weight='bold')
         ax.grid(True, linestyle='--', alpha=0.3)
