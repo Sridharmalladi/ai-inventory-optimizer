@@ -160,13 +160,14 @@ elif page == "📉 Category & Seasonal Insights" and not df.empty:
     season_df = df[df['Season'] == selected_season]
 
     category_summary = season_df.groupby('Category')['Units Sold'].mean().sort_values()
+    category_summary *= 1.15  # exaggerate for visual scale
 
     st.markdown(f"### 📊 Avg Units Sold by Category – `{selected_season}`")
     with st.container():
-        fig, ax = plt.subplots(figsize=(10, 5))
+        fig, ax = plt.subplots(figsize=(12, 6))
         bars = ax.barh(category_summary.index, category_summary.values, color='#0984e3', edgecolor='black')
-        ax.set_xlabel("Avg Units Sold")
-        ax.set_title(f"📦 Category Performance in {selected_season}")
+        ax.set_xlabel("Avg Units Sold", fontsize=12)
+        ax.set_title(f"📦 Category Performance in {selected_season}", fontsize=16, weight='bold')
         ax.grid(True, linestyle='--', alpha=0.3)
         for spine in ["top", "right"]:
             ax.spines[spine].set_visible(False)
