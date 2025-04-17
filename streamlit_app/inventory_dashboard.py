@@ -17,26 +17,39 @@ from sklearn.model_selection import train_test_split
 
 st.set_page_config(page_title="AI Inventory Optimizer", layout="wide")
 
+# Optional: show current working directory for debug
+# st.text(f"📁 Current working directory: {os.getcwd()}")
+
 # Sidebar navigation
 page = st.sidebar.radio("Go to", ["📊 EDA & Modeling", "📉 Category & Seasonal Insights", "📈 Optimization Dashboard"])
 
 # Load model
 @st.cache_resource
 def load_model():
-    with open("models/xgb_model.pkl", "rb") as f:
-        return pickle.load(f)
+    try:
+        model_path = os.path.join(os.path.dirname(__file__), "..", "models", "xgb_model.pkl")
+        with open(model_path, "rb") as f:
+            return pickle.load(f)
+    except FileNotFoundError:
+        st.error("🚨 Model file not found! Please make sure 'models/xgb_model.pkl' exists.")
+        return None
 
 model = load_model()
 
 # Load data
 @st.cache_data
 def load_processed_data():
-    return pd.read_csv("data/processed_data/final_model_data.csv", parse_dates=['Date'])
+    try:
+        data_path = os.path.join(os.path.dirname(__file__), "..", "data", "processed_data", "final_model_data.csv")
+        return pd.read_csv(data_path, parse_dates=['Date'])
+    except FileNotFoundError:
+        st.error("🚨 Data file not found! Please ensure 'data/processed_data/final_model_data.csv' is in your repo.")
+        return pd.DataFrame()
 
 df = load_processed_data()
 
 # --- PAGE 1: EDA & MODELING ---
-if page == "📊 EDA & Modeling":
+if page == "📊 EDA & Modeling" and not df.empty and model is not None:
     st.title("🔍 Exploratory Data Analysis & Model Development")
 
     st.markdown("""
@@ -88,7 +101,6 @@ if page == "📊 EDA & Modeling":
         ax.set_ylabel("Actual Units Sold")
         ax.legend()
         st.pyplot(fig)
-
     else:
         st.markdown("### 🔍 Predicted vs Actual – XGBoost")
         fig, ax = plt.subplots(figsize=(8, 4))
@@ -100,7 +112,7 @@ if page == "📊 EDA & Modeling":
         st.pyplot(fig)
 
 # --- PAGE 2: CATEGORY & SEASONAL INSIGHTS ---
-elif page == "📉 Category & Seasonal Insights":
+elif page == "📉 Category & Seasonal Insights" and not df.empty:
     st.title("🗓️ Category Sales by Season")
 
     df['Season'] = df['Date'].dt.month % 12 // 3 + 1
@@ -121,7 +133,7 @@ elif page == "📉 Category & Seasonal Insights":
     st.pyplot(fig)
 
 # --- PAGE 3: OPTIMIZATION DASHBOARD ---
-elif page == "📈 Optimization Dashboard":
+elif page == "📈 Optimization Dashboard" and not df.empty and model is not None:
     st.title("📦 Inventory Optimization Dashboard")
 
     stores = sorted(df['Store ID'].unique())
@@ -131,12 +143,7 @@ elif page == "📈 Optimization Dashboard":
     latest_date = df_store['Date'].max()
     df_latest = df_store[df_store['Date'] == latest_date].copy()
 
-    capacity = st.slider(
-        "Total Inventory Capacity",
-        min_value=100,
-        max_value=2500,
-        step=100
-    )
+    capacity = st.slider("Total Inventory Capacity", min_value=100, max_value=2500, step=100)
 
     if 'Predicted Demand' not in df_latest.columns:
         features = ['DayOfWeek', 'IsWeekend', 'IsPromo', 'RollingDemand7', 'RollingDemand14', 'Lag_1', 'Discount', 'Inventory_Level']
@@ -164,7 +171,6 @@ elif page == "📈 Optimization Dashboard":
         "Allocation Gap": "{:+.0f}"
     }))
 
-    # Responsive chart sizing
     n = len(result_df)
     fig, ax = plt.subplots(figsize=(min(14, n * 1.5), 5))
     x = np.arange(n)
