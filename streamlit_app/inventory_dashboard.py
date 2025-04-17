@@ -203,44 +203,42 @@ elif page == "📄 Executive Summary Report":
     st.title("📄 Executive Summary: AI-Powered Inventory Optimization")
 
     st.markdown("""
-    ### 🧩 Problem Statement
+    ## Problem Statement
     Retail chains often struggle with matching supply to fluctuating demand, resulting in overstocking, lost sales, or excess logistics costs.
 
-    ### 🎯 Objective
+    ## Objective
     Build an AI-powered system that forecasts product-level demand and optimally allocates inventory per store to improve fulfillment and minimize surplus.
 
-    ### 📊 Dataset Overview
+    ## Dataset Overview
     - **Source**: Internal retail data from multiple stores over time
     - **Rows**: 60,000+
     - **Features**: Date, Store ID, Product ID, Promotion, Discount, Category, Inventory Level, Units Sold, and more
 
-    ### 🔍 Model Selection & Evaluation
+    ## Model Selection & Evaluation
     We experimented with two models:
     - Random Forest (baseline)
     - XGBoost (final model of choice due to better accuracy)
 
-    #### 📈 Model Metrics:
+    ### Model Metrics:
     | Model           | RMSE   | MAE   | Accuracy |
     |------------------|--------|--------|-----------|
     | Random Forest    | 114.07 | 89.84  | 46%       |
     | **XGBoost**      | **80.22** | **61.99** | **57%**    |
 
-    ### 🔧 Accuracy Boosting Techniques
+    ## Accuracy Boosting Techniques
     - Applied **log-normal transformation** on skewed numeric features
     - Created **product-level models** to capture variation across items
     - Engineered new temporal & rolling window features (e.g., Lag_1, RollingDemand7)
 
-    ### 📌 Feature Impact Analysis (SHAP)
+    ## Feature Impact Analysis (SHAP)
     SHAP values revealed the most influential and least impactful features:
     - **High Impact**: `Inventory_Level`, `RollingDemand7`, `Lag_1`
     - **Low Impact**: `IsWeekend`, `IsPromo`, `Discount`
 
-    ### ✅ Conclusion
+    ## Conclusion
     This AI system enables smarter inventory planning by accurately forecasting demand and dynamically adjusting allocations. It reduces stockouts and surplus, and can be extended with external signals like weather, regional events, or pricing changes for even greater accuracy.
     """)
 
 
-
-st.caption("Built by Sridhar Malladi • AI Inventory Optimization Framework 🚚📦")
 
 st.caption("Built by Sridhar Malladi • AI Inventory Optimization Framework 🚚📦")
