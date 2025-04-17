@@ -235,10 +235,19 @@ elif page == "📄 Executive Summary Report":
     - **High Impact**: `Inventory_Level`, `RollingDemand7`, `Lag_1`
     - **Low Impact**: `IsWeekend`, `IsPromo`, `Discount`
 
+    ## How Can This Be Improved?
+    While XGBoost showed superior accuracy, it was limited to ~57% due to the **absence of external context** in the feature set. Retail demand is influenced by many real-world variables that aren't present in the dataset. For example:
+
+    - **Weather patterns** (rain, snow, extreme heat) that affect store foot traffic
+    - **Local events and holidays** unique to regions
+    - **Competitor promotions** and pricing
+    - **Economic signals** (e.g., inflation, unemployment)
+
+    Incorporating APIs like OpenWeather, Google Trends, or regional event calendars could introduce these variables and potentially boost accuracy to 70%+.
+
     ## Conclusion
-    This AI system enables smarter inventory planning by accurately forecasting demand and dynamically adjusting allocations. It reduces stockouts and surplus, and can be extended with external signals like weather, regional events, or pricing changes for even greater accuracy.
+    This AI system enables smarter inventory planning by accurately forecasting demand and dynamically adjusting allocations. It reduces stockouts and surplus, and with further feature enrichment, can become a highly adaptive real-time decision system.
     """)
 
-
-
 st.caption("Built by Sridhar Malladi • AI Inventory Optimization Framework 🚚📦")
+
