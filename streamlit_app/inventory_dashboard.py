@@ -62,20 +62,24 @@ def train_rf(X_train, y_train):
 
 # --- PAGE 1: EDA & MODELING ---
 if page == "📊 EDA & Modeling" and not df.empty and model is not None:
-    st.title("🔍 Exploratory Data Analysis & Model Development")
-
     st.markdown("""
-    This page presents key insights extracted from the historical retail dataset:
+    <style>
+        .big-font { font-size: 32px !important; font-weight: 600; color: #2e86de; }
+        .section { background-color: #f8f9fa; padding: 20px; border-radius: 12px; box-shadow: 0 0 10px rgba(0,0,0,0.05); }
+    </style>
+    """, unsafe_allow_html=True)
 
-    - **EDA Highlights**:
-      - Strong weekly seasonality in demand.
-      - Promotions and holidays drive spikes.
-      - Discounts show moderate positive correlation with sales.
+    st.markdown('<div class="big-font">🔍 Exploratory Data Analysis & Model Development</div>', unsafe_allow_html=True)
 
-    - **Model Experimentation**:
-      - Random Forest (baseline)
-      - XGBoost (final choice)
-    """)
+    with st.container():
+        st.markdown("""
+        <div class="section">
+        <ul>
+            <li><b>EDA Highlights</b>:<br>Weekly seasonality and promotion-driven demand spikes observed.</li>
+            <li><b>Model Experimentation</b>:<br>Random Forest (baseline) and XGBoost (final model).</li>
+        </ul>
+        </div>
+        """, unsafe_allow_html=True)
 
     features = ['DayOfWeek', 'IsWeekend', 'IsPromo', 'RollingDemand7', 'RollingDemand14',
                 'Lag_1', 'Discount', 'Inventory_Level']
@@ -84,13 +88,16 @@ if page == "📊 EDA & Modeling" and not df.empty and model is not None:
     X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=False, test_size=0.2)
 
     # Model metrics from experimentation
-    st.markdown("### 📈 Model Performance (from experimentation)")
+    st.markdown("### 📈 Model Performance")
     st.markdown("""
-    | Model           | RMSE   | MAE   |
-    |------------------|--------|--------|
-    | Random Forest    | 114.07 | 89.84  |
-    | **XGBoost**      | **80.22** | **61.99** |
-    """)
+    <div class="section">
+    <table>
+        <tr><th style='text-align:left'>Model</th><th>RMSE</th><th>MAE</th></tr>
+        <tr><td>Random Forest</td><td>114.07</td><td>89.84</td></tr>
+        <tr><td><b>XGBoost</b></td><td><b>80.22</b></td><td><b>61.99</b></td></tr>
+    </table>
+    </div>
+    """, unsafe_allow_html=True)
 
     rf_model = train_rf(X_train, y_train)
 
@@ -109,26 +116,28 @@ if page == "📊 EDA & Modeling" and not df.empty and model is not None:
     sample_rf = pd.DataFrame({'Actual': y_test, 'Predicted': y_pred_rf}).iloc[:200]
     sample_xgb = pd.DataFrame({'Actual': y_test, 'Predicted': y_pred_xgb}).iloc[:200]
 
-    st.markdown("### 🔍 Predicted vs Actual – Side-by-Side Comparison")
+    st.markdown("### 📊 Side-by-Side Comparison")
     col1, col2 = st.columns(2)
 
     with col1:
-        st.markdown("#### Random Forest")
+        st.markdown("#### 🎯 Random Forest")
         fig_rf, ax_rf = plt.subplots(figsize=(6, 4))
-        ax_rf.scatter(sample_rf['Predicted'], sample_rf['Actual'], color='darkorange', label='RF Prediction')
+        ax_rf.scatter(sample_rf['Predicted'], sample_rf['Actual'], color='#ffa502', edgecolor='black')
         ax_rf.plot([0, sample_rf.max().max()], [0, sample_rf.max().max()], 'r--', label='Ideal Fit')
         ax_rf.set_xlabel("Predicted Demand")
         ax_rf.set_ylabel("Actual Units Sold")
+        ax_rf.set_title("RF Predictions")
         ax_rf.legend()
         st.pyplot(fig_rf)
 
     with col2:
-        st.markdown("#### XGBoost")
+        st.markdown("#### ⚡ XGBoost")
         fig_xgb, ax_xgb = plt.subplots(figsize=(6, 4))
-        ax_xgb.scatter(sample_xgb['Predicted'], sample_xgb['Actual'], color='teal', label='XGB Prediction')
+        ax_xgb.scatter(sample_xgb['Predicted'], sample_xgb['Actual'], color='#00cec9', edgecolor='black')
         ax_xgb.plot([0, sample_xgb.max().max()], [0, sample_xgb.max().max()], 'r--', label='Ideal Fit')
         ax_xgb.set_xlabel("Predicted Demand")
         ax_xgb.set_ylabel("Actual Units Sold")
+        ax_xgb.set_title("XGBoost Predictions")
         ax_xgb.legend()
         st.pyplot(fig_xgb)
 
