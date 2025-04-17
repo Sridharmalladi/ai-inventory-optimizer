@@ -74,9 +74,9 @@ if page == "📊 EDA & Modeling" and not df.empty and model is not None:
     with st.container():
         st.markdown("""
         <div class="section">
-        <ul>
-            <li><b>EDA Highlights</b>:<br>Weekly seasonality and promotion-driven demand spikes observed.</li>
-            <li><b>Model Experimentation</b>:<br>Random Forest (baseline) and XGBoost (final model).</li>
+        <ul style='line-height:1.8; font-size:16px;'>
+            <li><b>EDA Highlights</b>: Weekly seasonality and promotion-driven demand spikes observed.</li>
+            <li><b>Model Experimentation</b>: Random Forest (baseline) and XGBoost (final model).</li>
         </ul>
         </div>
         """, unsafe_allow_html=True)
@@ -160,14 +160,13 @@ elif page == "📉 Category & Seasonal Insights" and not df.empty:
     season_df = df[df['Season'] == selected_season]
 
     category_summary = season_df.groupby('Category')['Units Sold'].mean().sort_values()
-    category_summary *= 1.15  # exaggerate for visual scale
 
     st.markdown(f"### 📊 Avg Units Sold by Category – `{selected_season}`")
     with st.container():
-        fig, ax = plt.subplots(figsize=(12, 6))
+        fig, ax = plt.subplots(figsize=(10, 4))
         bars = ax.barh(category_summary.index, category_summary.values, color='#0984e3', edgecolor='black')
-        ax.set_xlabel("Avg Units Sold", fontsize=12)
-        ax.set_title(f"📦 Category Performance in {selected_season}", fontsize=16, weight='bold')
+        ax.set_xlabel("Avg Units Sold", fontsize=11)
+        ax.set_title(f"📦 Category Performance in {selected_season}", fontsize=14, weight='bold')
         ax.grid(True, linestyle='--', alpha=0.3)
         for spine in ["top", "right"]:
             ax.spines[spine].set_visible(False)
