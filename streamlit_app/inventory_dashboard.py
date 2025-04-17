@@ -17,11 +17,14 @@ from sklearn.model_selection import train_test_split
 
 st.set_page_config(page_title="AI Inventory Optimizer", layout="wide")
 
-# Optional: show current working directory for debug
-# st.text(f"📁 Current working directory: {os.getcwd()}")
 
 # Sidebar navigation
-page = st.sidebar.radio("Go to", ["📊 EDA & Modeling", "📉 Category & Seasonal Insights", "📈 Optimization Dashboard"])
+page = st.sidebar.radio("Go to", [
+    "📊 EDA & Modeling",
+    "📉 Category & Seasonal Insights",
+    "📈 Optimization Dashboard",
+    "📄 Executive Summary Report"
+])
 
 # Load model
 @st.cache_resource
@@ -48,6 +51,13 @@ def load_processed_data():
 
 df = load_processed_data()
 
+# Cache RF model training
+@st.cache_resource
+def train_rf(X_train, y_train):
+    model_rf = RandomForestRegressor(n_estimators=100, random_state=42)
+    model_rf.fit(X_train, y_train)
+    return model_rf
+
 # --- PAGE 1: EDA & MODELING ---
 if page == "📊 EDA & Modeling" and not df.empty and model is not None:
     st.title("🔍 Exploratory Data Analysis & Model Development")
@@ -58,7 +68,7 @@ if page == "📊 EDA & Modeling" and not df.empty and model is not None:
     - **EDA Highlights**:
       - Strong weekly seasonality in demand.
       - Promotions and holidays drive spikes.
-      - Discounts show moderate positive correlation with sales.
+      - Discounts show a moderate positive correlation with sales.
 
     - **Model Experimentation**:
       - Random Forest (baseline)
@@ -83,33 +93,33 @@ if page == "📊 EDA & Modeling" and not df.empty and model is not None:
     # Model selector for scatter plot
     selected_model = st.radio("Select Model for Visual Comparison", ["Random Forest", "XGBoost"], horizontal=True)
 
-    # Compute predictions (safe to do here for 1-time visuals)
-    model_rf = RandomForestRegressor(n_estimators=100, random_state=42)
-    model_rf.fit(X_train, y_train)
-    y_pred_rf = model_rf.predict(X_test)
+    rf_model = train_rf(X_train, y_train)
+    y_pred_rf = rf_model.predict(X_test)
     y_pred_xgb = model.predict(X_test)
 
-    sample_rf = pd.DataFrame({'Actual': y_test, 'Predicted': y_pred_rf}).sample(200)
-    sample_xgb = pd.DataFrame({'Actual': y_test, 'Predicted': y_pred_xgb}).sample(200)
+    sample_rf = pd.DataFrame({'Actual': y_test, 'Predicted': y_pred_rf}).iloc[:200]
+    sample_xgb = pd.DataFrame({'Actual': y_test, 'Predicted': y_pred_xgb}).iloc[:200]
 
     if selected_model == "Random Forest":
         st.markdown("### 🔍 Predicted vs Actual – Random Forest")
-        fig, ax = plt.subplots(figsize=(8, 4))
-        ax.scatter(sample_rf['Predicted'], sample_rf['Actual'], alpha=0.6, color='darkorange', label='RF Prediction')
-        ax.plot([0, sample_rf.max().max()], [0, sample_rf.max().max()], 'r--', label='Ideal Fit')
-        ax.set_xlabel("Predicted Demand")
-        ax.set_ylabel("Actual Units Sold")
-        ax.legend()
-        st.pyplot(fig)
+        with st.expander("Show RF Scatter Plot"):
+            fig, ax = plt.subplots(figsize=(8, 4))
+            ax.scatter(sample_rf['Predicted'], sample_rf['Actual'], color='darkorange', label='RF Prediction')
+            ax.plot([0, sample_rf.max().max()], [0, sample_rf.max().max()], 'r--', label='Ideal Fit')
+            ax.set_xlabel("Predicted Demand")
+            ax.set_ylabel("Actual Units Sold")
+            ax.legend()
+            st.pyplot(fig)
     else:
         st.markdown("### 🔍 Predicted vs Actual – XGBoost")
-        fig, ax = plt.subplots(figsize=(8, 4))
-        ax.scatter(sample_xgb['Predicted'], sample_xgb['Actual'], alpha=0.6, color='teal', label='XGB Prediction')
-        ax.plot([0, sample_xgb.max().max()], [0, sample_xgb.max().max()], 'r--', label='Ideal Fit')
-        ax.set_xlabel("Predicted Demand")
-        ax.set_ylabel("Actual Units Sold")
-        ax.legend()
-        st.pyplot(fig)
+        with st.expander("Show XGBoost Scatter Plot"):
+            fig, ax = plt.subplots(figsize=(8, 4))
+            ax.scatter(sample_xgb['Predicted'], sample_xgb['Actual'], color='teal', label='XGB Prediction')
+            ax.plot([0, sample_xgb.max().max()], [0, sample_xgb.max().max()], 'r--', label='Ideal Fit')
+            ax.set_xlabel("Predicted Demand")
+            ax.set_ylabel("Actual Units Sold")
+            ax.legend()
+            st.pyplot(fig)
 
 # --- PAGE 2: CATEGORY & SEASONAL INSIGHTS ---
 elif page == "📉 Category & Seasonal Insights" and not df.empty:
@@ -230,5 +240,7 @@ elif page == "📄 Executive Summary Report":
     """)
 
 
+
+st.caption("Built by Sridhar Malladi • AI Inventory Optimization Framework 🚚📦")
 
 st.caption("Built by Sridhar Malladi • AI Inventory Optimization Framework 🚚📦")
