@@ -17,6 +17,8 @@ from sklearn.model_selection import train_test_split
 
 st.set_page_config(page_title="AI Inventory Optimizer", layout="wide")
 
+# Optional: show current working directory for debug
+# st.text(f"📁 Current working directory: {os.getcwd()}")
 
 # Sidebar navigation
 page = st.sidebar.radio("Go to", [
@@ -68,7 +70,7 @@ if page == "📊 EDA & Modeling" and not df.empty and model is not None:
     - **EDA Highlights**:
       - Strong weekly seasonality in demand.
       - Promotions and holidays drive spikes.
-      - Discounts show a moderate positive correlation with sales.
+      - Discounts show moderate positive correlation with sales.
 
     - **Model Experimentation**:
       - Random Forest (baseline)
@@ -90,36 +92,45 @@ if page == "📊 EDA & Modeling" and not df.empty and model is not None:
     | **XGBoost**      | **80.22** | **61.99** |
     """)
 
-    # Model selector for scatter plot
-    selected_model = st.radio("Select Model for Visual Comparison", ["Random Forest", "XGBoost"], horizontal=True)
-
     rf_model = train_rf(X_train, y_train)
-    y_pred_rf = rf_model.predict(X_test)
-    y_pred_xgb = model.predict(X_test)
+
+    try:
+        y_pred_rf = rf_model.predict(X_test)
+    except Exception as e:
+        st.error(f"RF prediction failed: {e}")
+        y_pred_rf = [0] * len(X_test)
+
+    try:
+        y_pred_xgb = model.predict(X_test)
+    except Exception as e:
+        st.error(f"XGBoost prediction failed: {e}")
+        y_pred_xgb = [0] * len(X_test)
 
     sample_rf = pd.DataFrame({'Actual': y_test, 'Predicted': y_pred_rf}).iloc[:200]
     sample_xgb = pd.DataFrame({'Actual': y_test, 'Predicted': y_pred_xgb}).iloc[:200]
 
-    if selected_model == "Random Forest":
-        st.markdown("### 🔍 Predicted vs Actual – Random Forest")
-        with st.expander("Show RF Scatter Plot"):
-            fig, ax = plt.subplots(figsize=(8, 4))
-            ax.scatter(sample_rf['Predicted'], sample_rf['Actual'], color='darkorange', label='RF Prediction')
-            ax.plot([0, sample_rf.max().max()], [0, sample_rf.max().max()], 'r--', label='Ideal Fit')
-            ax.set_xlabel("Predicted Demand")
-            ax.set_ylabel("Actual Units Sold")
-            ax.legend()
-            st.pyplot(fig)
-    else:
-        st.markdown("### 🔍 Predicted vs Actual – XGBoost")
-        with st.expander("Show XGBoost Scatter Plot"):
-            fig, ax = plt.subplots(figsize=(8, 4))
-            ax.scatter(sample_xgb['Predicted'], sample_xgb['Actual'], color='teal', label='XGB Prediction')
-            ax.plot([0, sample_xgb.max().max()], [0, sample_xgb.max().max()], 'r--', label='Ideal Fit')
-            ax.set_xlabel("Predicted Demand")
-            ax.set_ylabel("Actual Units Sold")
-            ax.legend()
-            st.pyplot(fig)
+    st.markdown("### 🔍 Predicted vs Actual – Side-by-Side Comparison")
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.markdown("#### Random Forest")
+        fig_rf, ax_rf = plt.subplots(figsize=(6, 4))
+        ax_rf.scatter(sample_rf['Predicted'], sample_rf['Actual'], color='darkorange', label='RF Prediction')
+        ax_rf.plot([0, sample_rf.max().max()], [0, sample_rf.max().max()], 'r--', label='Ideal Fit')
+        ax_rf.set_xlabel("Predicted Demand")
+        ax_rf.set_ylabel("Actual Units Sold")
+        ax_rf.legend()
+        st.pyplot(fig_rf)
+
+    with col2:
+        st.markdown("#### XGBoost")
+        fig_xgb, ax_xgb = plt.subplots(figsize=(6, 4))
+        ax_xgb.scatter(sample_xgb['Predicted'], sample_xgb['Actual'], color='teal', label='XGB Prediction')
+        ax_xgb.plot([0, sample_xgb.max().max()], [0, sample_xgb.max().max()], 'r--', label='Ideal Fit')
+        ax_xgb.set_xlabel("Predicted Demand")
+        ax_xgb.set_ylabel("Actual Units Sold")
+        ax_xgb.legend()
+        st.pyplot(fig_xgb)
 
 # --- PAGE 2: CATEGORY & SEASONAL INSIGHTS ---
 elif page == "📉 Category & Seasonal Insights" and not df.empty:
@@ -203,39 +214,39 @@ elif page == "📄 Executive Summary Report":
     st.title("📄 Executive Summary: AI-Powered Inventory Optimization")
 
     st.markdown("""
-    ## Problem Statement
+    ### 🧩 Problem Statement
     Retail chains often struggle with matching supply to fluctuating demand, resulting in overstocking, lost sales, or excess logistics costs.
 
-    ## Objective
+    ### 🎯 Objective
     Build an AI-powered system that forecasts product-level demand and optimally allocates inventory per store to improve fulfillment and minimize surplus.
 
-    ## Dataset Overview
+    ### 📊 Dataset Overview
     - **Source**: Internal retail data from multiple stores over time
     - **Rows**: 60,000+
     - **Features**: Date, Store ID, Product ID, Promotion, Discount, Category, Inventory Level, Units Sold, and more
 
-    ## Model Selection & Evaluation
+    ### 🔍 Model Selection & Evaluation
     We experimented with two models:
     - Random Forest (baseline)
     - XGBoost (final model of choice due to better accuracy)
 
-    ### Model Metrics:
+    #### 📈 Model Metrics:
     | Model           | RMSE   | MAE   | Accuracy |
     |------------------|--------|--------|-----------|
     | Random Forest    | 114.07 | 89.84  | 46%       |
     | **XGBoost**      | **80.22** | **61.99** | **57%**    |
 
-    ## Accuracy Boosting Techniques
+    ### 🔧 Accuracy Boosting Techniques
     - Applied **log-normal transformation** on skewed numeric features
     - Created **product-level models** to capture variation across items
     - Engineered new temporal & rolling window features (e.g., Lag_1, RollingDemand7)
 
-    ## Feature Impact Analysis (SHAP)
+    ### 📌 Feature Impact Analysis (SHAP)
     SHAP values revealed the most influential and least impactful features:
     - **High Impact**: `Inventory_Level`, `RollingDemand7`, `Lag_1`
     - **Low Impact**: `IsWeekend`, `IsPromo`, `Discount`
 
-    ## How Can This Be Improved?
+    ### 🚀 How Can This Be Improved?
     While XGBoost showed superior accuracy, it was limited to ~57% due to the **absence of external context** in the feature set. Retail demand is influenced by many real-world variables that aren't present in the dataset. For example:
 
     - **Weather patterns** (rain, snow, extreme heat) that affect store foot traffic
@@ -245,9 +256,8 @@ elif page == "📄 Executive Summary Report":
 
     Incorporating APIs like OpenWeather, Google Trends, or regional event calendars could introduce these variables and potentially boost accuracy to 70%+.
 
-    ## Conclusion
+    ### ✅ Conclusion
     This AI system enables smarter inventory planning by accurately forecasting demand and dynamically adjusting allocations. It reduces stockouts and surplus, and with further feature enrichment, can become a highly adaptive real-time decision system.
     """)
 
 st.caption("Built by Sridhar Malladi • AI Inventory Optimization Framework 🚚📦")
-
