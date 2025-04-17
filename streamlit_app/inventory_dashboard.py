@@ -6,7 +6,7 @@ import pickle
 import sys
 import os
 
-# 🔧 Add project root to path to access src/
+# Add src folder to Python path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from src.forecasting import predict_demand
@@ -17,10 +17,10 @@ from sklearn.model_selection import train_test_split
 
 st.set_page_config(page_title="AI Inventory Optimizer", layout="wide")
 
-# --- Sidebar Navigation ---
+# Sidebar navigation
 page = st.sidebar.radio("Go to", ["📊 EDA & Modeling", "📉 Category & Seasonal Insights", "📈 Optimization Dashboard"])
 
-# --- Load Model ---
+# Load model
 @st.cache_resource
 def load_model():
     with open("models/xgb_model.pkl", "rb") as f:
@@ -28,7 +28,7 @@ def load_model():
 
 model = load_model()
 
-# --- Load Data ---
+# Load data
 @st.cache_data
 def load_processed_data():
     return pd.read_csv("data/processed_data/final_model_data.csv", parse_dates=['Date'])
@@ -58,46 +58,46 @@ if page == "📊 EDA & Modeling":
     y = df['Units Sold']
     X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=False, test_size=0.2)
 
+    # Model metrics from experimentation
+    st.markdown("### 📈 Model Performance (from experimentation)")
+    st.markdown("""
+    | Model           | RMSE   | MAE   |
+    |------------------|--------|--------|
+    | Random Forest    | 114.07 | 89.84  |
+    | **XGBoost**      | **80.22** | **61.99** |
+    """)
+
+    # Model selector for scatter plot
+    selected_model = st.radio("Select Model for Visual Comparison", ["Random Forest", "XGBoost"], horizontal=True)
+
+    # Compute predictions (safe to do here for 1-time visuals)
     model_rf = RandomForestRegressor(n_estimators=100, random_state=42)
     model_rf.fit(X_train, y_train)
     y_pred_rf = model_rf.predict(X_test)
+    y_pred_xgb = model.predict(X_test)
 
-    model_xgb_eval = model
-    y_pred_xgb = model_xgb_eval.predict(X_test)
-
-    rmse_rf = np.sqrt(mean_squared_error(y_test, y_pred_rf))
-    mae_rf = mean_absolute_error(y_test, y_pred_rf)
-    rmse_xgb = np.sqrt(mean_squared_error(y_test, y_pred_xgb))
-    mae_xgb = mean_absolute_error(y_test, y_pred_xgb)
-
-    st.markdown(f"""
-    ### 📈 Model Performance
-
-    | Model           | RMSE   | MAE   |
-    |------------------|--------|--------|
-    | Random Forest    | {rmse_rf:.2f} | {mae_rf:.2f} |
-    | **XGBoost**      | **{rmse_xgb:.2f}** | **{mae_xgb:.2f}** |
-    """)
-
-    st.markdown("### 🔍 Predicted vs Actual – Random Forest")
     sample_rf = pd.DataFrame({'Actual': y_test, 'Predicted': y_pred_rf}).sample(200)
-    fig1, ax1 = plt.subplots(figsize=(8, 4))
-    ax1.scatter(sample_rf['Predicted'], sample_rf['Actual'], alpha=0.6, color='darkorange', label='RF Prediction')
-    ax1.plot([0, sample_rf.max().max()], [0, sample_rf.max().max()], 'r--', label='Ideal Fit')
-    ax1.set_xlabel("Predicted Demand")
-    ax1.set_ylabel("Actual Units Sold")
-    ax1.legend()
-    st.pyplot(fig1)
-
-    st.markdown("### 🔍 Predicted vs Actual – XGBoost")
     sample_xgb = pd.DataFrame({'Actual': y_test, 'Predicted': y_pred_xgb}).sample(200)
-    fig2, ax2 = plt.subplots(figsize=(8, 4))
-    ax2.scatter(sample_xgb['Predicted'], sample_xgb['Actual'], alpha=0.6, color='teal', label='XGB Prediction')
-    ax2.plot([0, sample_xgb.max().max()], [0, sample_xgb.max().max()], 'r--', label='Ideal Fit')
-    ax2.set_xlabel("Predicted Demand")
-    ax2.set_ylabel("Actual Units Sold")
-    ax2.legend()
-    st.pyplot(fig2)
+
+    if selected_model == "Random Forest":
+        st.markdown("### 🔍 Predicted vs Actual – Random Forest")
+        fig, ax = plt.subplots(figsize=(8, 4))
+        ax.scatter(sample_rf['Predicted'], sample_rf['Actual'], alpha=0.6, color='darkorange', label='RF Prediction')
+        ax.plot([0, sample_rf.max().max()], [0, sample_rf.max().max()], 'r--', label='Ideal Fit')
+        ax.set_xlabel("Predicted Demand")
+        ax.set_ylabel("Actual Units Sold")
+        ax.legend()
+        st.pyplot(fig)
+
+    else:
+        st.markdown("### 🔍 Predicted vs Actual – XGBoost")
+        fig, ax = plt.subplots(figsize=(8, 4))
+        ax.scatter(sample_xgb['Predicted'], sample_xgb['Actual'], alpha=0.6, color='teal', label='XGB Prediction')
+        ax.plot([0, sample_xgb.max().max()], [0, sample_xgb.max().max()], 'r--', label='Ideal Fit')
+        ax.set_xlabel("Predicted Demand")
+        ax.set_ylabel("Actual Units Sold")
+        ax.legend()
+        st.pyplot(fig)
 
 # --- PAGE 2: CATEGORY & SEASONAL INSIGHTS ---
 elif page == "📉 Category & Seasonal Insights":
@@ -183,4 +183,3 @@ elif page == "📈 Optimization Dashboard":
     st.pyplot(fig)
 
 st.caption("Built by Sridhar Malladi • AI Inventory Optimization Framework 🚚📦")
-
