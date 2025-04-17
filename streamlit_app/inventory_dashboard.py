@@ -143,7 +143,14 @@ if page == "📊 EDA & Modeling" and not df.empty and model is not None:
 
 # --- PAGE 2: CATEGORY & SEASONAL INSIGHTS ---
 elif page == "📉 Category & Seasonal Insights" and not df.empty:
-    st.title("🗓️ Category Sales by Season")
+    st.markdown("""
+    <style>
+        .section-header { font-size: 28px; font-weight: 600; color: #2d3436; margin-top: 10px; }
+        .styled-box { background-color: #f4f6f7; padding: 20px; border-radius: 10px; box-shadow: 0 0 8px rgba(0,0,0,0.03); }
+    </style>
+    """, unsafe_allow_html=True)
+
+    st.markdown('<div class="section-header">🗓️ Category Sales by Season</div>', unsafe_allow_html=True)
 
     df['Season'] = df['Date'].dt.month % 12 // 3 + 1
     season_names = {1: "Winter", 2: "Spring", 3: "Summer", 4: "Fall"}
@@ -155,16 +162,24 @@ elif page == "📉 Category & Seasonal Insights" and not df.empty:
     category_summary = season_df.groupby('Category')['Units Sold'].mean().sort_values()
 
     st.markdown(f"### 📊 Avg Units Sold by Category – `{selected_season}`")
-    fig, ax = plt.subplots(figsize=(10, 5))
-    category_summary.plot(kind='barh', color='steelblue', ax=ax)
-    ax.set_xlabel("Avg Units Sold")
-    ax.set_title(f"Category Performance in {selected_season}")
-    ax.set_xlim(category_summary.min() * 0.9, category_summary.max() * 1.1)
-    st.pyplot(fig)
+    with st.container():
+        fig, ax = plt.subplots(figsize=(10, 5))
+        bars = ax.barh(category_summary.index, category_summary.values, color='#0984e3', edgecolor='black')
+        ax.set_xlabel("Avg Units Sold")
+        ax.set_title(f"📦 Category Performance in {selected_season}")
+        ax.grid(True, linestyle='--', alpha=0.3)
+        for spine in ["top", "right"]:
+            ax.spines[spine].set_visible(False)
+        st.pyplot(fig)
 
 # --- PAGE 3: OPTIMIZATION DASHBOARD ---
 elif page == "📈 Optimization Dashboard" and not df.empty and model is not None:
-    st.title("📦 Inventory Optimization Dashboard")
+    st.markdown("""
+    <style>
+        .dashboard-title { font-size: 28px; font-weight: 600; color: #27ae60; margin-bottom: 20px; }
+    </style>
+    """, unsafe_allow_html=True)
+    st.markdown('<div class="dashboard-title">📦 Inventory Optimization Dashboard</div>', unsafe_allow_html=True)
 
     stores = sorted(df['Store ID'].unique())
     selected_store = st.selectbox("Select Store", stores)
@@ -177,7 +192,11 @@ elif page == "📈 Optimization Dashboard" and not df.empty and model is not Non
 
     if 'Predicted Demand' not in df_latest.columns:
         features = ['DayOfWeek', 'IsWeekend', 'IsPromo', 'RollingDemand7', 'RollingDemand14', 'Lag_1', 'Discount', 'Inventory_Level']
-        df_latest['Predicted Demand'] = predict_demand(model, df_latest[features])
+        try:
+            df_latest['Predicted Demand'] = predict_demand(model, df_latest[features])
+        except Exception as e:
+            st.error(f"Prediction failed: {e}")
+            df_latest['Predicted Demand'] = 0
 
     df_optimize = df_latest[['Product ID', 'Predicted Demand']].sort_values(by='Predicted Demand', ascending=False).head(10).reset_index(drop=True)
     result_df = optimize_inventory(df_optimize, total_capacity=capacity)
@@ -206,16 +225,18 @@ elif page == "📈 Optimization Dashboard" and not df.empty and model is not Non
     x = np.arange(n)
     width = 0.25
 
-    ax.bar(x - width, result_df['Predicted Demand'], width, label='Predicted', color='skyblue')
-    ax.bar(x, result_df['Allocated Stock'], width, label='Allocated', color='lightgreen')
-    ax.bar(x + width, result_df['Units Sold'], width, label='Actual', color='mediumpurple')
+    ax.bar(x - width, result_df['Predicted Demand'], width, label='Predicted', color='#74b9ff', edgecolor='black')
+    ax.bar(x, result_df['Allocated Stock'], width, label='Allocated', color='#55efc4', edgecolor='black')
+    ax.bar(x + width, result_df['Units Sold'], width, label='Actual', color='#a29bfe', edgecolor='black')
 
     ax.set_xticks(x)
     ax.set_xticklabels(result_df['Product ID'], rotation=45)
     ax.set_ylabel("Units")
     ax.set_title("Predicted vs Allocated vs Actual")
     ax.legend()
-    ax.grid(True, linestyle='--', alpha=0.5)
+    ax.grid(True, linestyle='--', alpha=0.3)
+    for spine in ["top", "right"]:
+        ax.spines[spine].set_visible(False)
     st.pyplot(fig)
 
 # --- PAGE 4: EXECUTIVE REPORT ---
